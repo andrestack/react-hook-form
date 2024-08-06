@@ -7,6 +7,15 @@ import React from "react";
 import { Label } from "./ui/label";
 import { Button } from "./ui/button";
 import { Input } from "@/components/ui/input";
+import { format } from "date-fns";
+import { Calendar as CalendarIcon } from "lucide-react";
+import { Calendar } from "./ui/calendar";
+import { cn } from "@/lib/utils";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const urlSchema = z.string().refine(
   (val) => {
@@ -68,10 +77,12 @@ export default function ReactForm() {
     }
   };
 
+  const [date, setDate] = React.useState<Date>();
+
   return (
     <div className="flex items-center justify-center h-screen">
       <form
-        className="mx-auto w-1/2 border border-opacity-80 p-10"
+        className="mx-auto w-1/3 border border-opacity-80 p-10 shadow-lg shadow-black/30"
         onSubmit={handleSubmit(onSubmit)}
       >
         <Label htmlFor="name">App Name</Label>
@@ -87,15 +98,42 @@ export default function ReactForm() {
         )}
         <Label htmlFor="tags">Tags</Label>
         <Input {...register("tags")} type="text" />
-        <Label htmlFor="date">Date Added</Label>
-        <Input {...register("date")} type="date" />
+        {/* <Label htmlFor="date">Date Added</Label>
+        <Input {...register("date")} type="date" /> */}
+        <Popover {...register("date")}>
+          <PopoverTrigger asChild>
+            <Button
+              variant={"outline"}
+              className={cn(
+                "w-[280px] justify-start text-left font-normal mt-4",
+                !date && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {date ? format(date, "PPP") : <span>Date Added</span>}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0">
+            <Calendar
+              mode="single"
+              selected={date}
+              onSelect={setDate}
+              initialFocus
+              
+            />
+          </PopoverContent>
+        </Popover>
+        
+        
+        
         <Button
           disabled={isSubmitting}
-          className="align-self-center px-10 gap-3 mt-8"
+          className="items-center px-10 gap-3 mt-8"
           type="submit"
         >
           {isSubmitting ? "Loading..." : "Submit"}
         </Button>
+       
       </form>
     </div>
   );
