@@ -16,6 +16,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
+import { useToast } from "@/components/ui/use-toast";
 
 const urlSchema = z.string().refine(
   (val) => {
@@ -42,19 +43,15 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
-// type FormValues = {
-//   name: string;
-//   url: string;
-//   description: string;
-//   tags: string;
-//   date: string;
-// };
-
 export default function ReactForm() {
+  const { toast } = useToast();
+  const [date, setDate] = React.useState<Date>();
+
   const {
     register,
     handleSubmit,
-    setError,
+    setValue,
+    reset,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
     defaultValues: {
@@ -68,73 +65,102 @@ export default function ReactForm() {
   });
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
-    try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      console.log(data);
-      throw new Error("Tool has already been added");
-    } catch (error) {
-      setError("name", { message: "Tool has already been added" });
+    // Simulate API call
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // Randomly succeed or fail
+    if (Math.random() > 0.5) {
+      toast({
+        title: "Success",
+        description: "Tool has been successfully submitted.",
+        variant: "default",
+      });
+      reset();
+      setDate(undefined); // Reset the date state
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to submit the tool. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
-  const [date, setDate] = React.useState<Date>();
-
   return (
-    <div className="flex items-center justify-center h-screen">
+    <>
+    <div className="flex items-center justify-center min-h-screen p-4">
       <form
-        className="mx-auto w-1/3 border border-opacity-80 p-10 shadow-lg shadow-black/30"
+        className="w-full max-w-md border border-opacity-80 p-6 shadow-lg shadow-black/30 rounded-lg"
         onSubmit={handleSubmit(onSubmit)}
       >
-        <Label htmlFor="name">App Name</Label>
-        <Input {...register("name")} type="text" />
-        {errors.name && <p className="text-red-500">{errors.name.message}</p>}
-        <Label htmlFor="url">URL</Label>
-        <Input {...register("url")} type="text" />
-        {errors.url && <p className="text-red-500">{errors.url.message}</p>}
-        <Label htmlFor="description">What Does it Do?</Label>
-        <Input {...register("description")} type="text" />
-        {errors.description && (
-          <p className="text-red-500">{errors.description.message}</p>
-        )}
-        <Label htmlFor="tags">Tags</Label>
-        <Input {...register("tags")} type="text" />
-        {/* <Label htmlFor="date">Date Added</Label>
-        <Input {...register("date")} type="date" /> */}
-        <Popover {...register("date")}>
-          <PopoverTrigger asChild>
-            <Button
-              variant={"outline"}
-              className={cn(
-                "w-[280px] justify-start text-left font-normal mt-4",
-                !date && "text-muted-foreground"
-              )}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {date ? format(date, "PPP") : <span>Date Added</span>}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0">
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={setDate}
-              initialFocus
-              
-            />
-          </PopoverContent>
-        </Popover>
-        
-        
-        
+        <div className="space-y-4">
+          <div>
+            <Label htmlFor="name">App Name</Label>
+            <Input {...register("name")} type="text" id="name" />
+            {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
+          </div>
+
+          <div>
+            <Label htmlFor="url">URL</Label>
+            <Input {...register("url")} type="text" id="url" />
+            {errors.url && <p className="text-red-500 text-sm mt-1">{errors.url.message}</p>}
+          </div>
+
+          <div>
+            <Label htmlFor="description">What Does it Do?</Label>
+            <Input {...register("description")} type="text" id="description" />
+            {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>}
+          </div>
+
+          <div>
+            <Label htmlFor="tags">Tags</Label>
+            <Input {...register("tags")} type="text" id="tags" />
+            {errors.tags && <p className="text-red-500 text-sm mt-1">{errors.tags.message}</p>}
+          </div>
+
+          <div>
+            <Label htmlFor="date">Date Added</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant={"outline"}
+                  className={cn(
+                    "w-full justify-start text-left font-normal",
+                    !date && "text-muted-foreground"
+                  )}
+                  id="date"
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {date ? format(date, "PPP") : <span>Pick a date</span>}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0">
+                <Calendar
+                  mode="single"
+                  selected={date}
+                  onSelect={(newDate) => {
+                    setDate(newDate);
+                    if (newDate) {
+                      setValue("date", format(newDate, "yyyy-MM-dd"), { shouldValidate: true });
+                    }
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+            {errors.date && <p className="text-red-500 text-sm mt-1">{errors.date.message}</p>}
+          </div>
+        </div>
+
         <Button
           disabled={isSubmitting}
-          className="items-center px-10 gap-3 mt-8"
+          className="w-full mt-6"
           type="submit"
         >
-          {isSubmitting ? "Loading..." : "Submit"}
+          {isSubmitting ? "Submitting..." : "Submit"}
         </Button>
-       
       </form>
     </div>
+    </>
   );
 }
