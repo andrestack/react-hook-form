@@ -1,6 +1,7 @@
 "use client";
 
 import { useForm, SubmitHandler } from "react-hook-form";
+import { useEffect, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import React from "react";
@@ -45,7 +46,8 @@ type FormValues = z.infer<typeof schema>;
 
 export default function ReactForm() {
   const { toast } = useToast();
-  const [date, setDate] = React.useState<Date>();
+  const [date, setDate] = useState<Date>();
+  const [mounted, setMounted] = useState(false);
 
   const {
     register,
@@ -63,6 +65,10 @@ export default function ReactForm() {
     },
     resolver: zodResolver(schema),
   });
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const onSubmit: SubmitHandler<FormValues> = async (data) => {
     // Simulate API call
@@ -87,8 +93,7 @@ export default function ReactForm() {
   };
 
   return (
-    <>
-    <div className="flex items-center justify-center min-h-screen p-4">
+    <section className="flex items-center justify-center min-h-fit">
       <form
         className="w-full max-w-md border border-opacity-80 p-6 shadow-lg shadow-black/30 rounded-lg"
         onSubmit={handleSubmit(onSubmit)}
@@ -97,70 +102,81 @@ export default function ReactForm() {
           <div>
             <Label htmlFor="name">App Name</Label>
             <Input {...register("name")} type="text" id="name" />
-            {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
+            {errors.name && (
+              <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>
+            )}
           </div>
 
           <div>
             <Label htmlFor="url">URL</Label>
             <Input {...register("url")} type="text" id="url" />
-            {errors.url && <p className="text-red-500 text-sm mt-1">{errors.url.message}</p>}
+            {errors.url && (
+              <p className="text-red-500 text-sm mt-1">{errors.url.message}</p>
+            )}
           </div>
 
           <div>
             <Label htmlFor="description">What Does it Do?</Label>
             <Input {...register("description")} type="text" id="description" />
-            {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>}
+            {errors.description && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.description.message}
+              </p>
+            )}
           </div>
 
           <div>
             <Label htmlFor="tags">Tags</Label>
             <Input {...register("tags")} type="text" id="tags" />
-            {errors.tags && <p className="text-red-500 text-sm mt-1">{errors.tags.message}</p>}
+            {errors.tags && (
+              <p className="text-red-500 text-sm mt-1">{errors.tags.message}</p>
+            )}
           </div>
 
           <div>
             <Label htmlFor="date">Date Added</Label>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant={"outline"}
-                  className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !date && "text-muted-foreground"
-                  )}
-                  id="date"
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? format(date, "PPP") : <span>Pick a date</span>}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={(newDate) => {
-                    setDate(newDate);
-                    if (newDate) {
-                      setValue("date", format(newDate, "yyyy-MM-dd"), { shouldValidate: true });
-                    }
-                  }}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-            {errors.date && <p className="text-red-500 text-sm mt-1">{errors.date.message}</p>}
+            {mounted && (
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant={"outline"}
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !date && "text-muted-foreground"
+                    )}
+                    id="date"
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {date ? format(date, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={date}
+                    onSelect={(newDate) => {
+                      setDate(newDate);
+                      if (newDate) {
+                        setValue("date", format(newDate, "yyyy-MM-dd"), {
+                          shouldValidate: true,
+                        });
+                      }
+                    }}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            )}
+            {errors.date && (
+              <p className="text-red-500 text-sm mt-1">{errors.date.message}</p>
+            )}
           </div>
         </div>
 
-        <Button
-          disabled={isSubmitting}
-          className="w-full mt-6"
-          type="submit"
-        >
+        <Button disabled={isSubmitting} className="w-full mt-6" type="submit">
           {isSubmitting ? "Submitting..." : "Submit"}
         </Button>
       </form>
-    </div>
-    </>
+    </section>
   );
 }
